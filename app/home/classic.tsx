@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useCart } from "../CartContext"; 
+import { v4 as uuidv4 } from "uuid"; 
+import { useRouter } from "expo-router"; 
 
 export default function Classic() {
   const [flavour, setFlavour] = useState("");
@@ -8,10 +11,49 @@ export default function Classic() {
   const [choice3, setChoice3] = useState("");
   const [comments, setComments] = useState("");
 
+  const { addToCart } = useCart();
+  const router = useRouter();  
+
   const toggleTopping = (item: string) => {
     setToppings((prev) =>
       prev.includes(item) ? prev.filter((t) => t !== item) : [...prev, item]
     );
+  };
+
+  const onAddToCart = () => {
+    if (!flavour) {
+      alert("Please select a flavour.");
+      return;
+    }
+
+    const newItem = {
+      id: uuidv4(),
+      name: "Classic",
+      flavour,
+      toppings,
+      choice3,
+      comments,
+      price: calculatePrice(flavour, toppings, choice3),
+      quantity: 1,
+    };
+
+    addToCart(newItem);
+
+    // Optional: reset selections after adding
+    setFlavour("");
+    setToppings([]);
+    setChoice3("");
+    setComments("");
+
+    router.push("/home/home"); 
+  };
+
+  // Example pricing logic (adjust as needed)
+  const calculatePrice = (flavour: string, toppings: string[], choice3: string) => {
+    let basePrice = 100; // base price for Classic
+    basePrice += toppings.length * 10; // example: 10 per topping
+    // add price logic for choice3 if needed
+    return basePrice;
   };
 
   return (
@@ -100,7 +142,7 @@ export default function Classic() {
         />
       </ScrollView>
 
-      <TouchableOpacity style={styles.floatingButton}>
+      <TouchableOpacity style={styles.floatingButton} onPress={onAddToCart}>
         <Ionicons name="cart-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
         <Text style={styles.floatingButtonText}>Add to cart</Text>
       </TouchableOpacity>

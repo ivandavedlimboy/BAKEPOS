@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+//Declare cart item 
 type CartItem = {
   id: string;
   name: string;
@@ -24,7 +25,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const addToCart = (item: CartItem) => {
-    setCartItems((prev) => [...prev, item]);
+    setCartItems((prev) => {
+      
+      // Find if an identical item (same name, flavour, toppings, choice3, comments) already exists
+      const existingIndex = prev.findIndex(
+        (i) =>
+          i.name === item.name &&
+          i.flavour === item.flavour &&
+          i.choice3 === item.choice3 &&
+          i.comments === item.comments &&
+          // Compare toppings arrays (simple approach: stringify both)
+          JSON.stringify(i.toppings.sort()) === JSON.stringify(item.toppings.sort())
+      );
+
+      if (existingIndex >= 0) {
+        // If found, increase quantity of that existing item
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: updated[existingIndex].quantity + item.quantity,
+        };
+        return updated;
+      }
+
+      // Otherwise add new item
+      return [...prev, item];
+    });
   };
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -38,7 +64,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart }}>
+    <CartContext.Provider
+      value={{ cartItems, addToCart, updateQuantity, removeFromCart }}
+    >
       {children}
     </CartContext.Provider>
   );

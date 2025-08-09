@@ -1,11 +1,14 @@
 import { Stack, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { CartProvider } from "./CartContext"; // Adjust path if your CartContext is elsewhere
+import React from "react";
 
 export default function PortalLayout() {
   const router = useRouter();
 
   const Header = () => (
     <View style={styles.header}>
+      {/* Adjust logo image */}
       <View style={styles.logoSphere} />
       <View style={styles.links}>
         <TouchableOpacity onPress={() => router.push("/home/home")}>
@@ -30,7 +33,11 @@ export default function PortalLayout() {
     </View>
   );
 
-  return <Stack screenOptions={{ header: () => <Header /> }} />;
+  return (
+    <CartProvider>
+      <Stack screenOptions={{ header: () => <Header /> }} />
+    </CartProvider>
+  );
 }
 
 const styles = StyleSheet.create({

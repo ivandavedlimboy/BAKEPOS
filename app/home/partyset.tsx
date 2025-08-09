@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useCart } from "../CartContext";
+import { v4 as uuidv4 } from "uuid"; 
+import { useRouter } from "expo-router"; 
+
 
 export default function PartySet() {
   const [flavour, setFlavour] = useState("");
@@ -8,10 +12,49 @@ export default function PartySet() {
   const [choice3, setChoice3] = useState("");
   const [comments, setComments] = useState("");
 
+  const { addToCart } = useCart();
+  const router = useRouter();  
+
+
   const toggleTopping = (item: string) => {
     setToppings((prev) =>
       prev.includes(item) ? prev.filter((t) => t !== item) : [...prev, item]
     );
+  };
+
+  const calculatePrice = (flavour: string, toppings: string[], choice3: string) => {
+    let basePrice = 150; // Example base price for PartySet
+    basePrice += toppings.length * 15; // Example: 15 pesos per topping
+    // Add any other pricing rules for choice3 here if needed. 
+    return basePrice;
+  };
+
+  const onAddToCart = () => {
+    if (!flavour) {
+      alert("Please select a flavour.");
+      return;
+    }
+
+    const newItem = {
+      id: uuidv4(),
+      name: "PartySet",
+      flavour,
+      toppings,
+      choice3,
+      comments,
+      price: calculatePrice(flavour, toppings, choice3),
+      quantity: 1,
+    };
+
+    addToCart(newItem);
+
+    // Optionally reset state
+    setFlavour("");
+    setToppings([]);
+    setChoice3("");
+    setComments("");
+
+    router.push("/home/home"); 
   };
 
   return (
@@ -100,7 +143,7 @@ export default function PartySet() {
         />
       </ScrollView>
 
-      <TouchableOpacity style={styles.floatingButton}>
+      <TouchableOpacity style={styles.floatingButton} onPress={onAddToCart}>
         <Ionicons name="cart-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
         <Text style={styles.floatingButtonText}>Add to cart</Text>
       </TouchableOpacity>

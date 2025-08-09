@@ -9,13 +9,13 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const onSubmit = (data: any) => {
-    // Mock login instead of Firebase
+
     if (data.email === "test@example.com" && data.password === "password") {
       setSuccessMessage("Logged in successfully!");
       setErrorMessage(null);
       setTimeout(() => {
         setSuccessMessage(null);
-        // router.replace("/Homepage/journal");
+
       }, 2000);
     } else {
       setErrorMessage("Invalid email or password.");
