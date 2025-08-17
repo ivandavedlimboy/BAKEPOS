@@ -11,7 +11,6 @@ export default function Home() {
     { id: 1, title: "CLASSIC", route: "/home/classic" },
     { id: 2, title: "PARTY SET", route: "/home/partyset" },
     { id: 3, title: "OPTION 3" },
-    { id: 4, title: "OPTION 4" },
   ];
 
   return isMobile ? (

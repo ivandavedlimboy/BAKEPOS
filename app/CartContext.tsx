@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-//Declare cart item 
 type CartItem = {
   id: string;
   name: string;
@@ -17,6 +17,8 @@ type CartContextType = {
   addToCart: (item: CartItem) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
+  clearCart: () => void;
+  removeCheckedOutItems: (itemsToRemove: CartItem[]) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,22 +26,30 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
+  useEffect(() => {
+    AsyncStorage.getItem("cart").then((data) => {
+      if (data) {
+        setCartItems(JSON.parse(data));
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem("cart", JSON.stringify(cartItems));
+  }, [cartItems]);
+
   const addToCart = (item: CartItem) => {
     setCartItems((prev) => {
-      
-      // Find if an identical item (same name, flavour, toppings, choice3, comments) already exists
       const existingIndex = prev.findIndex(
         (i) =>
           i.name === item.name &&
           i.flavour === item.flavour &&
           i.choice3 === item.choice3 &&
           i.comments === item.comments &&
-          // Compare toppings arrays (simple approach: stringify both)
           JSON.stringify(i.toppings.sort()) === JSON.stringify(item.toppings.sort())
       );
 
       if (existingIndex >= 0) {
-        // If found, increase quantity of that existing item
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -48,7 +58,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return updated;
       }
 
-      // Otherwise add new item
       return [...prev, item];
     });
   };
@@ -59,13 +68,50 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  // 🔽 Decrement quantity or remove if it hits 0
   const removeFromCart = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    setCartItems((prev) =>
+      prev
+        .map((item) =>
+          item.id === id
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const removeCheckedOutItems = (itemsToRemove: CartItem[]) => {
+    setCartItems((prev) =>
+      prev.filter(
+        (cartItem) =>
+          !itemsToRemove.some(
+            (item) =>
+              item.id === cartItem.id &&
+              item.name === cartItem.name &&
+              item.flavour === cartItem.flavour &&
+              item.choice3 === cartItem.choice3 &&
+              item.comments === cartItem.comments &&
+              JSON.stringify(item.toppings.sort()) === JSON.stringify(cartItem.toppings.sort())
+          )
+      )
+    );
   };
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, updateQuantity, removeFromCart }}
+      value={{
+        cartItems,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        removeCheckedOutItems,
+      }}
     >
       {children}
     </CartContext.Provider>
